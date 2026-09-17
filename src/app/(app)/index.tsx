@@ -9,7 +9,18 @@ import type { Galpao, SaldoLote, Silo } from '@/types/database';
 
 interface GalpaoComSaldo extends Galpao {
   saldoTotal: number;
-  silosCount: number;
+  silosNumeros: number[];
+}
+
+function formatarSilos(numeros: number[]): string {
+  if (numeros.length === 0) return 'Sem silos';
+  const ordenados = [...numeros].sort((a, b) => a - b);
+  const min = ordenados[0];
+  const max = ordenados[ordenados.length - 1];
+  const contiguo = max - min + 1 === ordenados.length;
+  if (ordenados.length === 1) return `Silo ${min}`;
+  if (contiguo) return `Silos ${min}-${max}`;
+  return `Silos ${ordenados.join(', ')}`;
 }
 
 export default function GalpoesScreen() {
@@ -26,7 +37,7 @@ export default function GalpoesScreen() {
       { data: saldosData, error: saldosError },
     ] = await Promise.all([
       supabase.from('galpoes').select('id, numero, nome').order('numero'),
-      supabase.from('silos').select('id, galpao_id, numero'),
+      supabase.from('silos').select('id, galpao_id, numero').order('numero'),
       supabase.from('saldo_lotes').select('lote_id, silo_id, quantidade_atual'),
     ]);
 
@@ -36,7 +47,7 @@ export default function GalpoesScreen() {
       return;
     }
 
-    const silos = (silosData ?? []) as Pick<Silo, 'id' | 'galpao_id'>[];
+    const silos = (silosData ?? []) as Pick<Silo, 'id' | 'galpao_id' | 'numero'>[];
     const saldos = (saldosData ?? []) as Pick<SaldoLote, 'silo_id' | 'quantidade_atual'>[];
     const saldoPorSilo = new Map(saldos.map((s) => [s.silo_id, s.quantidade_atual]));
 
@@ -46,7 +57,11 @@ export default function GalpoesScreen() {
         (sum, s) => sum + (saldoPorSilo.get(s.id) ?? 0),
         0
       );
-      return { ...galpao, saldoTotal, silosCount: silosDoGalpao.length };
+      return {
+        ...galpao,
+        saldoTotal,
+        silosNumeros: silosDoGalpao.map((s) => s.numero),
+      };
     });
 
     setGalpoes(combined);
@@ -90,7 +105,7 @@ export default function GalpoesScreen() {
             >
               <View>
                 <Text style={styles.cardTitle}>{item.nome}</Text>
-                <Text style={styles.cardSubtitle}>{item.silosCount} silo(s)</Text>
+                <Text style={styles.cardSubtitle}>{formatarSilos(item.silosNumeros)}</Text>
               </View>
               <View style={styles.saldoBox}>
                 <Text style={styles.saldoValue}>{item.saldoTotal}</Text>
