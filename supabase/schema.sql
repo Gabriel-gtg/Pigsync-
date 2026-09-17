@@ -100,18 +100,20 @@ grant select, insert on public.eventos_lote to authenticated;
 insert into public.perfis (id, nome, papel) values
   ('3f94fd69-b916-4929-ad25-1486ea57d954', 'Gabriel', 'admin');
 
--- Estrutura da fazenda: 6 galpões, 2 silos cada, 1 lote ativo por silo
+-- Estrutura da fazenda: 6 galpões, silos numerados 1 a 12 (sequencial
+-- pela fazenda toda, não reiniciando a cada galpão), 1 lote ativo por silo
 do $$
 declare
   g_id uuid;
   s_id uuid;
   gnum int;
-  snum int;
+  silo_num int := 0;
 begin
   for gnum in 1..6 loop
     insert into public.galpoes (numero, nome) values (gnum, 'Galpão ' || gnum) returning id into g_id;
-    for snum in 1..2 loop
-      insert into public.silos (galpao_id, numero) values (g_id, snum) returning id into s_id;
+    for i in 1..2 loop
+      silo_num := silo_num + 1;
+      insert into public.silos (galpao_id, numero) values (g_id, silo_num) returning id into s_id;
       insert into public.lotes (silo_id, quantidade_inicial, data_entrada, status)
         values (s_id, 200, current_date - 10, 'ativo');
     end loop;
