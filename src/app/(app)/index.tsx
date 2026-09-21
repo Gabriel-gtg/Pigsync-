@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { ErrorMessage, Loading } from '@/components/screen-state';
+import { FARM_NAME } from '@/constants/farm';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import type { Galpao, SaldoLote, Silo } from '@/types/database';
@@ -77,10 +78,21 @@ export default function GalpoesScreen() {
     setRefreshing(false);
   }
 
+  const totalGalpoes = galpoes?.length ?? 0;
+  const totalCabecas = galpoes?.reduce((sum, g) => sum + g.saldoTotal, 0) ?? 0;
+
   return (
     <>
       <Stack.Screen
         options={{
+          headerTitle: () => (
+            <View style={styles.headerTitleBox}>
+              <Text style={styles.headerFarmName} numberOfLines={1}>
+                {FARM_NAME}
+              </Text>
+              <Text style={styles.headerSubtitle}>Lotes de Terminação</Text>
+            </View>
+          ),
           headerRight: () => (
             <Pressable onPress={signOut} hitSlop={8}>
               <Text style={styles.signOutText}>Sair</Text>
@@ -98,12 +110,30 @@ export default function GalpoesScreen() {
           data={galpoes}
           keyExtractor={(item) => item.id}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+          ListHeaderComponent={
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryStat}>
+                <Text style={styles.summaryValue}>{totalGalpoes}</Text>
+                <Text style={styles.summaryLabel}>galpões</Text>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryStat}>
+                <Text style={[styles.summaryValue, styles.summaryValueHighlight]}>
+                  {totalCabecas}
+                </Text>
+                <Text style={styles.summaryLabel}>cabeças no total</Text>
+              </View>
+            </View>
+          }
           renderItem={({ item }) => (
             <Pressable
               style={styles.card}
               onPress={() => router.push(`/galpao/${item.id}`)}
             >
-              <View>
+              <View style={styles.cardBadge}>
+                <Text style={styles.cardBadgeText}>{item.numero}</Text>
+              </View>
+              <View style={styles.cardInfo}>
                 <Text style={styles.cardTitle}>{item.nome}</Text>
                 <Text style={styles.cardSubtitle}>{formatarSilos(item.silosNumeros)}</Text>
               </View>
@@ -122,24 +152,91 @@ export default function GalpoesScreen() {
 const styles = StyleSheet.create({
   list: {
     padding: 16,
-    gap: 12,
+    paddingBottom: 32,
+    backgroundColor: '#f9fafb',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
+  headerTitleBox: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+  },
+  headerFarmName: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  headerSubtitle: {
+    color: '#bbf7d0',
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  summaryCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 18,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
+  summaryStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryDivider: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: '#e5e7eb',
+  },
+  summaryValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  summaryValueHighlight: {
+    color: '#166534',
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  cardBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#ecfdf5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  cardBadgeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#166534',
+  },
+  cardInfo: {
+    flex: 1,
+  },
   cardTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
     color: '#111827',
   },
@@ -152,12 +249,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   saldoValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     color: '#166534',
   },
   saldoLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#6b7280',
   },
   signOutText: {
