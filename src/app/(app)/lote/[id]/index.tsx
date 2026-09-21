@@ -103,7 +103,18 @@ export default function LoteDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: silo ? `Silo ${silo.numero}` : 'Lote' }} />
+      <Stack.Screen
+        options={{
+          headerTitle: () => (
+            <View style={styles.headerTitleBox}>
+              <Text style={styles.headerTitle} numberOfLines={1}>
+                {silo ? `Silo ${silo.numero}` : 'Lote'}
+              </Text>
+              <Text style={styles.headerSubtitle}>Lote ativo</Text>
+            </View>
+          ),
+        }}
+      />
       <FlatList
         contentContainerStyle={styles.list}
         data={eventos}
@@ -196,14 +207,30 @@ const styles = StyleSheet.create({
   list: {
     padding: 16,
     paddingBottom: 32,
+    backgroundColor: '#f9fafb',
+  },
+  headerTitleBox: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  headerSubtitle: {
+    color: '#bbf7d0',
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   summaryCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 14,
+    padding: 18,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
@@ -241,7 +268,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    borderRadius: 10,
+    borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
   },
@@ -271,10 +298,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   eventBadge: {
     paddingHorizontal: 10,

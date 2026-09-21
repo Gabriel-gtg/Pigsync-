@@ -83,9 +83,22 @@ export default function SilosScreen() {
     setRefreshing(false);
   }
 
+  const totalCabecas = silos?.reduce((sum, s) => sum + (s.lote?.saldoAtual ?? 0), 0) ?? 0;
+
   return (
     <>
-      <Stack.Screen options={{ title: galpao ? galpao.nome : 'Silos' }} />
+      <Stack.Screen
+        options={{
+          headerTitle: () => (
+            <View style={styles.headerTitleBox}>
+              <Text style={styles.headerTitle} numberOfLines={1}>
+                {galpao ? galpao.nome : 'Silos'}
+              </Text>
+              <Text style={styles.headerSubtitle}>Silos</Text>
+            </View>
+          ),
+        }}
+      />
       {error ? (
         <ErrorMessage message={error} />
       ) : !silos ? (
@@ -96,14 +109,32 @@ export default function SilosScreen() {
           data={silos}
           keyExtractor={(item) => item.id}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+          ListHeaderComponent={
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryStat}>
+                <Text style={styles.summaryValue}>{silos.length}</Text>
+                <Text style={styles.summaryLabel}>silos</Text>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryStat}>
+                <Text style={[styles.summaryValue, styles.summaryValueHighlight]}>
+                  {totalCabecas}
+                </Text>
+                <Text style={styles.summaryLabel}>cabeças no total</Text>
+              </View>
+            </View>
+          }
           renderItem={({ item }) => (
             <Pressable
               style={styles.card}
               onPress={() => item.lote && router.push(`/lote/${item.lote.id}`)}
               disabled={!item.lote}
             >
-              <View>
-                <Text style={styles.cardTitle}>Silo {item.numero}</Text>
+              <View style={styles.cardBadge}>
+                <Text style={styles.cardBadgeText}>{item.numero}</Text>
+              </View>
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTitleCard}>Silo {item.numero}</Text>
                 {item.lote ? (
                   <Text style={styles.cardSubtitle}>
                     Entrada em {new Date(item.lote.data_entrada).toLocaleDateString('pt-BR')}
@@ -131,23 +162,91 @@ export default function SilosScreen() {
 const styles = StyleSheet.create({
   list: {
     padding: 16,
+    paddingBottom: 32,
+    backgroundColor: '#f9fafb',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
+  headerTitleBox: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  headerSubtitle: {
+    color: '#bbf7d0',
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  summaryCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 18,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  cardTitle: {
-    fontSize: 17,
+  summaryStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryDivider: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: '#e5e7eb',
+  },
+  summaryValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  summaryValueHighlight: {
+    color: '#166534',
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  cardBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#ecfdf5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  cardBadgeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#166534',
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardTitleCard: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#111827',
   },
@@ -160,12 +259,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   saldoValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     color: '#166534',
   },
   saldoLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#6b7280',
   },
 });
